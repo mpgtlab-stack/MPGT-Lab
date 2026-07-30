@@ -16,7 +16,8 @@ const NAV = [
   { id: "contribuer", label: "Contribuer" },
   { id: "suivre", label: "Suivre ma soumission" },
   { id: "articles", label: "Publications" },
-  { id: "admin", label: "Espace Responsables" },
+  // "admin" n'apparaît plus dans ce menu public.
+  // Accès réservé aux responsables via l'adresse .../#admin (voir plus bas).
 ];
 
 const TYPES = [
@@ -111,6 +112,8 @@ export default function App() {
 
   useEffect(() => {
     loadSubmissions();
+    // Accès discret à l'espace responsables : ...votresite.com/#admin
+    if (window.location.hash === "#admin") setPage("admin");
   }, []);
 
   function showToast(msg) {
@@ -160,7 +163,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
           <button onClick={() => goTo("accueil")} className="flex items-center gap-2 font-display text-lg sm:text-xl font-semibold tracking-tight">
             <Landmark className="w-5 h-5 text-amber-400" />
-            Club MPGT <span className="text-amber-400">·</span> ISCAE
+            MPGT<span className="text-amber-400">-</span>Lab
           </button>
           <nav className="hidden lg:flex items-center gap-1">
             {NAV.map((n) => (
@@ -220,7 +223,7 @@ export default function App() {
       <footer className="bg-slate-900 text-stone-300 mt-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 grid sm:grid-cols-3 gap-8 text-sm">
           <div>
-            <p className="font-display text-lg text-white mb-2">Club MPGT · ISCAE</p>
+            <p className="font-display text-lg text-white mb-2">MPGT-Lab</p>
             <p className="text-stone-400">Master Professionnel en Management Public et Gouvernance Territoriale.</p>
           </div>
           <div>
@@ -234,9 +237,9 @@ export default function App() {
           <div>
             <p className="font-semibold text-white mb-2">Suivez-nous</p>
             <div className="flex gap-3">
-              <Facebook className="w-5 h-5 text-stone-400" />
-              <Instagram className="w-5 h-5 text-stone-400" />
-              <Linkedin className="w-5 h-5 text-stone-400" />
+              <a href="https://www.facebook.com/MPGTLab" target="_blank" rel="noopener noreferrer"><Facebook className="w-5 h-5 text-stone-400 hover:text-amber-400" /></a>
+              <a href="https://www.instagram.com/mpgtlab/" target="_blank" rel="noopener noreferrer"><Instagram className="w-5 h-5 text-stone-400 hover:text-amber-400" /></a>
+              <a href="https://www.linkedin.com/company/mpgt-lab/about/" target="_blank" rel="noopener noreferrer"><Linkedin className="w-5 h-5 text-stone-400 hover:text-amber-400" /></a>
             </div>
           </div>
         </div>
@@ -305,21 +308,27 @@ function Accueil({ goTo, published, submissions }) {
 
 /* ---------------- LE CLUB ---------------- */
 function Club() {
-  const roles = [
-    "Président(e)", "Vice-président(e)", "Trésorier(ère)",
-    "Responsable communication", "Responsable publications & partenariats",
+  const bureau = [
+    { role: "Présidente", name: "Ben Rhouma Maha" },
+    { role: "Trésorière", name: "Sabbegh Maryem" },
+    { role: "Vice-présidente & Responsable RH", name: "Kort Eya" },
+    { role: "Responsable Relations Institutionnelles", name: "Jouini Ikram" },
+    { role: "Responsable Recherche & Publications", name: "Zeineb Dhaouedi" },
+    { role: "Responsable Média", name: "Ben Rhouma Maha" },
+    { role: "Responsable Communication & Événement", name: "Salem Yasmine" },
   ];
   return (
     <div className="max-w-3xl">
       <h1 className="font-display text-3xl font-semibold mb-4">Présentation du Club</h1>
       <p className="text-slate-700 leading-relaxed">
-        Le Club MPGT réunit les étudiants du Master Professionnel en Management Public et
+        MPGT-Lab est le club des étudiants du Master Professionnel en Management Public et
         Gouvernance Territoriale de l'ISCAE. Il prolonge les enseignements du programme à
         travers des activités parascolaires en lien direct avec les thématiques de la gestion
-        publique, des politiques territoriales et de la gouvernance.
+        publique, des politiques territoriales et de la gouvernance, et un espace où chacun
+        peut partager ses écrits et ses recherches.
       </p>
       <p className="text-slate-700 leading-relaxed mt-4">
-        Le Club est ouvert aux étudiants du Master en tant que membres actifs, et à tous les
+        MPGT-Lab est ouvert aux étudiants du Master en tant que membres actifs, et à tous les
         étudiants de l'ISCAE en tant que participants aux activités organisées.
       </p>
 
@@ -330,10 +339,13 @@ function Club() {
         <li>Donner un espace d'expression aux étudiants à travers l'écriture et la recherche</li>
       </ul>
 
-      <h2 className="font-display text-xl font-semibold mt-8 mb-3">Bureau du Club <span className="text-sm font-normal text-slate-400">(exemple à personnaliser)</span></h2>
-      <div className="flex flex-wrap gap-2">
-        {roles.map((r) => (
-          <span key={r} className="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 text-sm">{r}</span>
+      <h2 className="font-display text-xl font-semibold mt-8 mb-3">Bureau du Club</h2>
+      <div className="grid sm:grid-cols-2 gap-3">
+        {bureau.map((b) => (
+          <div key={b.role + b.name} className="bg-slate-100 border border-slate-200 rounded-lg px-4 py-3">
+            <p className="text-sm font-semibold text-slate-900">{b.name}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{b.role}</p>
+          </div>
         ))}
       </div>
     </div>
@@ -373,23 +385,23 @@ function Activites() {
 /* ---------------- RÉSEAUX ---------------- */
 function Reseaux() {
   const nets = [
-    { icon: Facebook, name: "Facebook", handle: "@clubmpgt.iscae (exemple)" },
-    { icon: Instagram, name: "Instagram", handle: "@clubmpgt.iscae (exemple)" },
-    { icon: Linkedin, name: "LinkedIn", handle: "Club MPGT ISCAE (exemple)" },
+    { icon: Facebook, name: "Facebook", handle: "MPGTLab", url: "https://www.facebook.com/MPGTLab" },
+    { icon: Instagram, name: "Instagram", handle: "@mpgtlab", url: "https://www.instagram.com/mpgtlab/" },
+    { icon: Linkedin, name: "LinkedIn", handle: "MPGT-Lab", url: "https://www.linkedin.com/company/mpgt-lab/about/" },
   ];
   return (
     <div className="max-w-xl">
       <h1 className="font-display text-3xl font-semibold mb-2">Réseaux sociaux</h1>
-      <p className="text-slate-500 text-sm mb-8">Remplacez ces liens par les vrais comptes du Club une fois créés.</p>
+      <p className="text-slate-500 text-sm mb-8">Suivez MPGT-Lab et retrouvez toute notre actualité.</p>
       <div className="space-y-3">
         {nets.map((n) => (
-          <div key={n.name} className="flex items-center gap-3 border border-slate-200 bg-white rounded-lg p-4">
+          <a key={n.name} href={n.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 border border-slate-200 bg-white rounded-lg p-4 hover:border-amber-400 transition-colors">
             <n.icon className="w-6 h-6 text-slate-700" />
             <div>
               <p className="font-semibold text-sm">{n.name}</p>
               <p className="text-xs text-slate-500">{n.handle}</p>
             </div>
-          </div>
+          </a>
         ))}
       </div>
     </div>
