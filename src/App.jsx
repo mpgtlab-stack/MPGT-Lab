@@ -14,8 +14,9 @@ const NAV = [
   { id: "activites", label: "Activités" },
   { id: "reseaux", label: "Réseaux" },
   { id: "contribuer", label: "Contribuer" },
-  { id: "suivre", label: "Suivre ma soumission" },
   { id: "articles", label: "Publications" },
+  // "suivre" n'apparaît plus dans ce menu public — accessible seulement via le
+  // bouton affiché après l'envoi d'une contribution, ou via .../#suivre.
   // "admin" n'apparaît plus dans ce menu public.
   // Accès réservé aux responsables via l'adresse .../#admin (voir plus bas).
 ];
@@ -112,8 +113,9 @@ export default function App() {
 
   useEffect(() => {
     loadSubmissions();
-    // Accès discret à l'espace responsables : ...votresite.com/#admin
+    // Accès discret : ...votresite.com/#admin ou .../#suivre
     if (window.location.hash === "#admin") setPage("admin");
+    if (window.location.hash === "#suivre") setPage("suivre");
   }, []);
 
   function showToast(msg) {
@@ -212,7 +214,7 @@ export default function App() {
             {page === "club" && <Club />}
             {page === "activites" && <Activites />}
             {page === "reseaux" && <Reseaux />}
-            {page === "contribuer" && <Contribuer addSubmission={addSubmission} showToast={showToast} />}
+            {page === "contribuer" && <Contribuer addSubmission={addSubmission} showToast={showToast} goTo={goTo} />}
             {page === "suivre" && <Suivre submissions={submissions} updateOne={updateOne} showToast={showToast} />}
             {page === "articles" && <Articles published={published} showToast={showToast} />}
             {page === "admin" && <Admin submissions={submissions} updateOne={updateOne} showToast={showToast} />}
@@ -409,7 +411,7 @@ function Reseaux() {
 }
 
 /* ---------------- CONTRIBUER ---------------- */
-function Contribuer({ addSubmission, showToast }) {
+function Contribuer({ addSubmission, showToast, goTo }) {
   const [form, setForm] = useState({ title: "", type: "article", authorName: "", authorEmail: "", content: "" });
   const [lastCode, setLastCode] = useState(null);
   const [sending, setSending] = useState(false);
@@ -458,8 +460,13 @@ function Contribuer({ addSubmission, showToast }) {
           <p className="text-xs text-stone-300 mb-1">Votre code de suivi</p>
           <p className="font-display text-2xl tracking-widest text-amber-400">{lastCode}</p>
         </div>
-        <p className="text-sm text-slate-500">Conservez ce code : il vous permettra de suivre le statut de votre contribution dans "Suivre ma soumission".</p>
-        <button onClick={() => setLastCode(null)} className="mt-6 text-sm underline text-slate-600">Proposer un autre contenu</button>
+        <p className="text-sm text-slate-500">Conservez ce code : il vous permettra de suivre le statut de votre contribution.</p>
+        <button onClick={() => goTo("suivre")} className="mt-4 bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-md text-sm font-semibold">
+          Suivre ma contribution
+        </button>
+        <div>
+          <button onClick={() => setLastCode(null)} className="mt-4 text-sm underline text-slate-600">Proposer un autre contenu</button>
+        </div>
       </div>
     );
   }
