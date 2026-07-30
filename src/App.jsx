@@ -161,11 +161,11 @@ export default function App() {
   return (
     <div className="min-h-screen bg-stone-50 text-slate-900 font-body">
       {/* HEADER */}
-      <header className="sticky top-0 z-40 bg-slate-900 text-stone-50 shadow-md">
+      <header className="sticky top-0 z-40 bg-brand-blue text-stone-50 shadow-md">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
           <button onClick={() => goTo("accueil")} className="flex items-center gap-2 font-display text-lg sm:text-xl font-semibold tracking-tight">
-            <Landmark className="w-5 h-5 text-amber-400" />
-            MPGT<span className="text-amber-400">-</span>Lab
+            <Landmark className="w-5 h-5 text-brand-green" />
+            MPGT<span className="text-brand-green">-</span>Lab
           </button>
           <nav className="hidden lg:flex items-center gap-1">
             {NAV.map((n) => (
@@ -173,7 +173,7 @@ export default function App() {
                 key={n.id}
                 onClick={() => goTo(n.id)}
                 className={`px-3 py-2 text-sm rounded-md transition-colors ${
-                  page === n.id ? "bg-amber-600 text-white" : "text-stone-200 hover:bg-slate-800"
+                  page === n.id ? "bg-brand-green text-white" : "text-stone-200 hover:bg-brand-blueLight"
                 }`}
               >
                 {n.label}
@@ -190,7 +190,7 @@ export default function App() {
               <button
                 key={n.id}
                 onClick={() => goTo(n.id)}
-                className={`text-left px-3 py-2.5 text-sm rounded-md ${page === n.id ? "bg-amber-600 text-white" : "text-stone-200"}`}
+                className={`text-left px-3 py-2.5 text-sm rounded-md ${page === n.id ? "bg-brand-green text-white" : "text-stone-200"}`}
               >
                 {n.label}
               </button>
@@ -200,7 +200,7 @@ export default function App() {
       </header>
 
       {toast && (
-        <div className="fixed top-20 right-4 z-50 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg text-sm max-w-xs">
+        <div className="fixed top-20 right-4 z-50 bg-brand-blue text-white px-4 py-3 rounded-lg shadow-lg text-sm max-w-xs">
           {toast}
         </div>
       )}
@@ -222,7 +222,7 @@ export default function App() {
         )}
       </main>
 
-      <footer className="bg-slate-900 text-stone-300 mt-16">
+      <footer className="bg-brand-blue text-stone-300 mt-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 grid sm:grid-cols-3 gap-8 text-sm">
           <div>
             <p className="font-display text-lg text-white mb-2">MPGT-Lab</p>
@@ -231,17 +231,17 @@ export default function App() {
           <div>
             <p className="font-semibold text-white mb-2">Navigation</p>
             <div className="flex flex-col gap-1">
-              <button onClick={() => goTo("club")} className="text-left text-stone-400 hover:text-amber-400">Le Club</button>
-              <button onClick={() => goTo("contribuer")} className="text-left text-stone-400 hover:text-amber-400">Proposer un contenu</button>
-              <button onClick={() => goTo("articles")} className="text-left text-stone-400 hover:text-amber-400">Publications</button>
+              <button onClick={() => goTo("club")} className="text-left text-stone-400 hover:text-brand-green">Le Club</button>
+              <button onClick={() => goTo("contribuer")} className="text-left text-stone-400 hover:text-brand-green">Proposer un contenu</button>
+              <button onClick={() => goTo("articles")} className="text-left text-stone-400 hover:text-brand-green">Publications</button>
             </div>
           </div>
           <div>
             <p className="font-semibold text-white mb-2">Suivez-nous</p>
             <div className="flex gap-3">
-              <a href="https://www.facebook.com/MPGTLab" target="_blank" rel="noopener noreferrer"><Facebook className="w-5 h-5 text-stone-400 hover:text-amber-400" /></a>
-              <a href="https://www.instagram.com/mpgtlab/" target="_blank" rel="noopener noreferrer"><Instagram className="w-5 h-5 text-stone-400 hover:text-amber-400" /></a>
-              <a href="https://www.linkedin.com/company/mpgt-lab/about/" target="_blank" rel="noopener noreferrer"><Linkedin className="w-5 h-5 text-stone-400 hover:text-amber-400" /></a>
+              <a href="https://www.facebook.com/MPGTLab" target="_blank" rel="noopener noreferrer"><Facebook className="w-5 h-5 text-stone-400 hover:text-brand-green" /></a>
+              <a href="https://www.instagram.com/mpgtlab/" target="_blank" rel="noopener noreferrer"><Instagram className="w-5 h-5 text-stone-400 hover:text-brand-green" /></a>
+              <a href="https://www.linkedin.com/company/mpgt-lab/about/" target="_blank" rel="noopener noreferrer"><Linkedin className="w-5 h-5 text-stone-400 hover:text-brand-green" /></a>
             </div>
           </div>
         </div>
@@ -255,7 +255,7 @@ function Accueil({ goTo, published, submissions }) {
   return (
     <div>
       <section className="text-center py-10 sm:py-16">
-        <p className="uppercase tracking-widest text-amber-700 text-xs font-semibold mb-3">ISCAE · Master Professionnel</p>
+        <p className="uppercase tracking-widest text-brand-greenDark text-xs font-semibold mb-3">ISCAE · Master Professionnel</p>
         <h1 className="font-display text-4xl sm:text-5xl font-semibold leading-tight max-w-3xl mx-auto">
           Management Public & Gouvernance Territoriale
         </h1>
@@ -264,7 +264,7 @@ function Accueil({ goTo, published, submissions }) {
           workshops, formations — et un espace ouvert pour partager vos écrits et recherches.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <button onClick={() => goTo("contribuer")} className="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2">
+          <button onClick={() => goTo("contribuer")} className="bg-brand-green hover:bg-brand-greenDark text-white px-5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2">
             Proposer un article <ArrowRight className="w-4 h-4" />
           </button>
           <button onClick={() => goTo("articles")} className="border border-slate-300 hover:bg-slate-100 px-5 py-2.5 rounded-md text-sm font-semibold">
@@ -369,7 +369,7 @@ function Activites() {
       <div className="grid sm:grid-cols-2 gap-5">
         {cats.map((c) => (
           <div key={c.title} className="border border-slate-200 bg-white rounded-lg p-5">
-            <c.icon className="w-6 h-6 text-amber-700 mb-3" />
+            <c.icon className="w-6 h-6 text-brand-greenDark mb-3" />
             <h3 className="font-display text-lg font-semibold">{c.title}</h3>
             <p className="text-slate-600 text-sm mt-1">{c.desc}</p>
             <ul className="mt-3 space-y-1">
@@ -397,7 +397,7 @@ function Reseaux() {
       <p className="text-slate-500 text-sm mb-8">Suivez MPGT-Lab et retrouvez toute notre actualité.</p>
       <div className="space-y-3">
         {nets.map((n) => (
-          <a key={n.name} href={n.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 border border-slate-200 bg-white rounded-lg p-4 hover:border-amber-400 transition-colors">
+          <a key={n.name} href={n.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 border border-slate-200 bg-white rounded-lg p-4 hover:border-brand-green transition-colors">
             <n.icon className="w-6 h-6 text-slate-700" />
             <div>
               <p className="font-semibold text-sm">{n.name}</p>
@@ -456,12 +456,12 @@ function Contribuer({ addSubmission, showToast, goTo }) {
         <CheckCircle2 className="w-12 h-12 text-teal-700 mx-auto mb-4" />
         <h1 className="font-display text-2xl font-semibold mb-2">Merci pour votre contribution !</h1>
         <p className="text-slate-600 mb-4">Elle a été transmise aux responsables du Club pour lecture.</p>
-        <div className="bg-slate-900 text-white rounded-lg p-4 mb-4">
+        <div className="bg-brand-blue text-white rounded-lg p-4 mb-4">
           <p className="text-xs text-stone-300 mb-1">Votre code de suivi</p>
-          <p className="font-display text-2xl tracking-widest text-amber-400">{lastCode}</p>
+          <p className="font-display text-2xl tracking-widest text-brand-green">{lastCode}</p>
         </div>
         <p className="text-sm text-slate-500">Conservez ce code : il vous permettra de suivre le statut de votre contribution.</p>
-        <button onClick={() => goTo("suivre")} className="mt-4 bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-md text-sm font-semibold">
+        <button onClick={() => goTo("suivre")} className="mt-4 bg-brand-green hover:bg-brand-greenDark text-white px-5 py-2.5 rounded-md text-sm font-semibold">
           Suivre ma contribution
         </button>
         <div>
@@ -503,7 +503,7 @@ function Contribuer({ addSubmission, showToast, goTo }) {
           <label className="text-sm font-semibold block mb-1">Votre texte</label>
           <textarea value={form.content} onChange={(e) => update("content", e.target.value)} rows={8} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
         </div>
-        <button disabled={sending} className="bg-amber-600 hover:bg-amber-700 text-white px-5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-60">
+        <button disabled={sending} className="bg-brand-green hover:bg-brand-greenDark text-white px-5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-60">
           {sending ? "Envoi…" : "Envoyer ma contribution"} <Send className="w-4 h-4" />
         </button>
       </form>
@@ -544,7 +544,7 @@ function Suivre({ submissions, updateOne, showToast }) {
       <div className="space-y-3">
         <input placeholder="Code (ex : MPGT-AB12CD)" value={code} onChange={(e) => setCode(e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
         <input placeholder="Email utilisé lors de l'envoi" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
-        <button onClick={search} className="bg-slate-900 text-white px-5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2">
+        <button onClick={search} className="bg-brand-blue text-white px-5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2">
           <Search className="w-4 h-4" /> Vérifier
         </button>
       </div>
@@ -565,7 +565,7 @@ function Suivre({ submissions, updateOne, showToast }) {
             <div className="mt-4">
               <label className="text-sm font-semibold block mb-1">Modifier votre texte</label>
               <textarea value={revision} onChange={(e) => setRevision(e.target.value)} rows={6} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
-              <button onClick={resend} className="mt-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-md text-sm font-semibold flex items-center gap-2">
+              <button onClick={resend} className="mt-2 bg-brand-green hover:bg-brand-greenDark text-white px-4 py-2 rounded-md text-sm font-semibold flex items-center gap-2">
                 <RotateCcw className="w-4 h-4" /> Renvoyer la version corrigée
               </button>
             </div>
@@ -605,9 +605,9 @@ function Articles({ published, showToast }) {
                   <p className="font-display text-lg font-semibold">{a.title}</p>
                   <p className="text-xs text-slate-500 mt-1">Par {a.authorName} · {fmtDate(a.createdAt)} · {TYPES.find(t => t.value === a.type)?.label}</p>
                 </div>
-                <button onClick={() => share(a)} className="text-slate-500 hover:text-amber-700 shrink-0"><Share2 className="w-5 h-5" /></button>
+                <button onClick={() => share(a)} className="text-slate-500 hover:text-brand-greenDark shrink-0"><Share2 className="w-5 h-5" /></button>
               </div>
-              <button onClick={() => setOpenId(openId === a.id ? null : a.id)} className="text-sm text-amber-700 font-semibold mt-3">
+              <button onClick={() => setOpenId(openId === a.id ? null : a.id)} className="text-sm text-brand-greenDark font-semibold mt-3">
                 {openId === a.id ? "Réduire" : "Lire l'article"}
               </button>
               {openId === a.id && (
@@ -664,7 +664,7 @@ function Admin({ submissions, updateOne, showToast }) {
         <p className="text-slate-500 text-sm mb-6">Accès réservé aux responsables du Club.</p>
         <form onSubmit={tryLogin} className="space-y-3">
           <input type="password" placeholder="Mot de passe" value={pwd} onChange={(e) => setPwd(e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
-          <button className="w-full bg-slate-900 text-white px-4 py-2.5 rounded-md text-sm font-semibold">Se connecter</button>
+          <button className="w-full bg-brand-blue text-white px-4 py-2.5 rounded-md text-sm font-semibold">Se connecter</button>
         </form>
       </div>
     );
@@ -688,7 +688,7 @@ function Admin({ submissions, updateOne, showToast }) {
       <h1 className="font-display text-3xl font-semibold mb-6">Espace Responsables</h1>
       <div className="flex flex-wrap gap-2 mb-6">
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={`px-3 py-1.5 rounded-md text-sm font-semibold ${tab === t.id ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"}`}>
+          <button key={t.id} onClick={() => setTab(t.id)} className={`px-3 py-1.5 rounded-md text-sm font-semibold ${tab === t.id ? "bg-brand-blue text-white" : "bg-slate-100 text-slate-600"}`}>
             {t.label}
           </button>
         ))}
@@ -713,7 +713,7 @@ function Admin({ submissions, updateOne, showToast }) {
                 <button onClick={() => publishAsIs(s)} className="text-xs font-semibold bg-teal-700 text-white px-3 py-1.5 rounded-md flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Publier tel quel
                 </button>
-                <button onClick={() => { setEditingId(s.id); setEditText(s.content); }} className="text-xs font-semibold bg-amber-600 text-white px-3 py-1.5 rounded-md flex items-center gap-1">
+                <button onClick={() => { setEditingId(s.id); setEditText(s.content); }} className="text-xs font-semibold bg-brand-green text-white px-3 py-1.5 rounded-md flex items-center gap-1">
                   <Edit3 className="w-3.5 h-3.5" /> Publier modifié
                 </button>
                 <button onClick={() => { setCommentingId(s.id); setCommentAction("needs_revision"); setCommentText(""); }} className="text-xs font-semibold bg-slate-500 text-white px-3 py-1.5 rounded-md flex items-center gap-1">
@@ -757,7 +757,7 @@ function Admin({ submissions, updateOne, showToast }) {
                 </label>
                 <textarea value={commentText} onChange={(e) => setCommentText(e.target.value)} rows={3} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
                 <div className="flex gap-2 mt-2">
-                  <button onClick={() => confirmComment(s)} className="text-xs font-semibold bg-slate-900 text-white px-3 py-1.5 rounded-md">Envoyer</button>
+                  <button onClick={() => confirmComment(s)} className="text-xs font-semibold bg-brand-blue text-white px-3 py-1.5 rounded-md">Envoyer</button>
                   <button onClick={() => setCommentingId(null)} className="text-xs font-semibold text-slate-500">Annuler</button>
                 </div>
               </div>
