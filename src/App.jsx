@@ -5,14 +5,12 @@ import {
   RotateCcw, MessageSquare, Landmark
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
+import { sendConfirmationEmail } from "./emailService";
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "ISCAE2026";
 
 const NAV = [
   { id: "accueil", label: "Accueil" },
-  { id: "club", label: "Le Club" },
-  { id: "activites", label: "Activités" },
-  { id: "reseaux", label: "Réseaux" },
   { id: "contribuer", label: "Contribuer" },
   { id: "articles", label: "Publications" },
   // "suivre" n'apparaît plus dans ce menu public — accessible seulement via le
@@ -53,6 +51,8 @@ function fromDb(row) {
     status: row.status,
     adminComment: row.admin_comment || "",
     publishedContent: row.published_content || "",
+    fileUrl: row.file_url || "",
+    fileName: row.file_name || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -69,9 +69,20 @@ function toDb(sub) {
     status: sub.status,
     admin_comment: sub.adminComment,
     published_content: sub.publishedContent,
+    file_url: sub.fileUrl || "",
+    file_name: sub.fileName || "",
     created_at: sub.createdAt,
     updated_at: sub.updatedAt,
   };
+}
+
+async function uploadContributionFile(file) {
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+  const path = `${Date.now()}-${safeName}`;
+  const { error } = await supabase.storage.from("contributions").upload(path, file);
+  if (error) throw error;
+  const { data } = supabase.storage.from("contributions").getPublicUrl(path);
+  return { fileUrl: data.publicUrl, fileName: file.name };
 }
 
 const STATUS_STYLES = {
@@ -140,6 +151,8 @@ export default function App() {
     if ("adminComment" in full) dbPatch.admin_comment = full.adminComment;
     if ("publishedContent" in full) dbPatch.published_content = full.publishedContent;
     if ("content" in full) dbPatch.content = full.content;
+    if ("fileUrl" in full) dbPatch.file_url = full.fileUrl;
+    if ("fileName" in full) dbPatch.file_name = full.fileName;
     dbPatch.updated_at = full.updatedAt;
 
     const { error } = await supabase.from("submissions").update(dbPatch).eq("id", id);
@@ -211,9 +224,6 @@ export default function App() {
         ) : (
           <>
             {page === "accueil" && <Accueil goTo={goTo} published={published} submissions={submissions} />}
-            {page === "club" && <Club />}
-            {page === "activites" && <Activites />}
-            {page === "reseaux" && <Reseaux />}
             {page === "contribuer" && <Contribuer addSubmission={addSubmission} showToast={showToast} goTo={goTo} />}
             {page === "suivre" && <Suivre submissions={submissions} updateOne={updateOne} showToast={showToast} />}
             {page === "articles" && <Articles published={published} showToast={showToast} />}
@@ -251,59 +261,90 @@ export default function App() {
 }
 
 /* ---------------- ACCUEIL ---------------- */
+const SUB_TABS = [
+  { id: "accueil", label: "Accueil" },
+  { id: "club", label: "Le Club" },
+  { id: "activites", label: "Activités" },
+  { id: "reseaux", label: "Réseaux" },
+];
+
 function Accueil({ goTo, published, submissions }) {
+  const [subTab, setSubTab] = useState("accueil");
+
   return (
     <div>
-      <section className="text-center py-10 sm:py-16">
-        <p className="uppercase tracking-widest text-brand-greenDark text-xs font-semibold mb-3">ISCAE · Master Professionnel</p>
-        <h1 className="font-display text-4xl sm:text-5xl font-semibold leading-tight max-w-3xl mx-auto">
-          Management Public & Gouvernance Territoriale
-        </h1>
-        <p className="mt-5 text-slate-600 max-w-xl mx-auto text-base sm:text-lg">
-          Le club des étudiants du Master : visites académiques, rencontres avec des experts,
-          workshops, formations — et un espace ouvert pour partager vos écrits et recherches.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <button onClick={() => goTo("contribuer")} className="bg-brand-green hover:bg-brand-greenDark text-white px-5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2">
-            Proposer un article <ArrowRight className="w-4 h-4" />
+      <div className="flex flex-wrap gap-2 mb-8 justify-center">
+        {SUB_TABS.map((t) => (
+          <button
+            key={t.id}
+            onClick={() => setSubTab(t.id)}
+            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+              subTab === t.id ? "bg-brand-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+            }`}
+          >
+            {t.label}
           </button>
-          <button onClick={() => goTo("articles")} className="border border-slate-300 hover:bg-slate-100 px-5 py-2.5 rounded-md text-sm font-semibold">
-            Lire les publications
-          </button>
-        </div>
-      </section>
+        ))}
+      </div>
 
-      <section className="grid sm:grid-cols-3 gap-4 py-8 border-y border-slate-200">
-        <div className="text-center">
-          <p className="font-display text-3xl font-semibold text-slate-900">{published.length}</p>
-          <p className="text-sm text-slate-500">Contenus publiés</p>
-        </div>
-        <div className="text-center">
-          <p className="font-display text-3xl font-semibold text-slate-900">{submissions.length}</p>
-          <p className="text-sm text-slate-500">Contributions reçues</p>
-        </div>
-        <div className="text-center">
-          <p className="font-display text-3xl font-semibold text-slate-900">4</p>
-          <p className="text-sm text-slate-500">Types d'activités du Club</p>
-        </div>
-      </section>
+      {subTab === "accueil" && (
+        <div>
+          <section className="text-center py-10 sm:py-16">
+            <p className="uppercase tracking-widest text-brand-greenDark text-xs font-semibold mb-3">ISCAE · Master Professionnel</p>
+            <h1 className="font-display text-4xl sm:text-5xl font-semibold leading-tight max-w-3xl mx-auto">
+              Management Public & Gouvernance Territoriale
+            </h1>
+            <p className="mt-5 text-slate-600 max-w-xl mx-auto text-base sm:text-lg">
+              MPGT-Lab, le club des étudiants du Master : visites académiques, rencontres avec
+              des experts — et un espace ouvert pour partager vos écrits et recherches.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <button onClick={() => goTo("contribuer")} className="bg-brand-green hover:bg-brand-greenDark text-white px-5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2">
+                Proposer un article <ArrowRight className="w-4 h-4" />
+              </button>
+              <button onClick={() => goTo("articles")} className="border border-slate-300 hover:bg-slate-100 px-5 py-2.5 rounded-md text-sm font-semibold">
+                Lire les publications
+              </button>
+            </div>
+          </section>
 
-      <section className="py-10">
-        <h2 className="font-display text-2xl font-semibold mb-6">Dernières publications</h2>
-        {published.length === 0 ? (
-          <p className="text-slate-500 text-sm">Aucune publication pour le moment — soyez le premier à contribuer !</p>
-        ) : (
-          <div className="grid sm:grid-cols-3 gap-4">
-            {published.slice(0, 3).map((a) => (
-              <div key={a.id} className="border border-slate-200 bg-white rounded-lg p-4">
-                <Badge status={a.status} />
-                <p className="font-display font-semibold mt-2">{a.title}</p>
-                <p className="text-xs text-slate-500 mt-1">Par {a.authorName} · {fmtDate(a.createdAt)}</p>
+          <section className="grid sm:grid-cols-3 gap-4 py-8 border-y border-slate-200">
+            <div className="text-center">
+              <p className="font-display text-3xl font-semibold text-slate-900">{published.length}</p>
+              <p className="text-sm text-slate-500">Contenus publiés</p>
+            </div>
+            <div className="text-center">
+              <p className="font-display text-3xl font-semibold text-slate-900">{submissions.length}</p>
+              <p className="text-sm text-slate-500">Contributions reçues</p>
+            </div>
+            <div className="text-center">
+              <p className="font-display text-3xl font-semibold text-slate-900">2</p>
+              <p className="text-sm text-slate-500">Types d'activités du Club</p>
+            </div>
+          </section>
+
+          <section className="py-10">
+            <h2 className="font-display text-2xl font-semibold mb-6">Dernières publications</h2>
+            {published.length === 0 ? (
+              <p className="text-slate-500 text-sm">Aucune publication pour le moment — soyez le premier à contribuer !</p>
+            ) : (
+              <div className="grid sm:grid-cols-3 gap-4">
+                {published.slice(0, 3).map((a) => (
+                  <div key={a.id} className="border border-slate-200 bg-white rounded-lg p-4">
+                    <Badge status={a.status} />
+                    <p className="font-display font-semibold mt-2">{a.title}</p>
+                    <p className="text-xs text-slate-500 mt-1">Par {a.authorName} · {fmtDate(a.createdAt)}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            )}
+          </section>
+        </div>
+      )}
+
+      {subTab === "club" && <Club />}
+      {subTab === "activites" && <Activites />}
+      {subTab === "reseaux" && <Reseaux />}
     </div>
   );
 }
@@ -312,7 +353,7 @@ function Accueil({ goTo, published, submissions }) {
 function Club() {
   const bureau = [
     { role: "Présidente", name: "Ben Rhouma Maha" },
-    { role: "Trésorière", name: "Sabbegh Maryem" },
+    { role: "Trésorière", name: "Sabbagh Maryem" },
     { role: "Vice-présidente & Responsable RH", name: "Kort Eya" },
     { role: "Responsable Relations Institutionnelles", name: "Jouini Ikram" },
     { role: "Responsable Recherche & Publications", name: "Zeineb Dhaouedi" },
@@ -357,24 +398,46 @@ function Club() {
 /* ---------------- ACTIVITÉS ---------------- */
 function Activites() {
   const cats = [
-    { icon: Landmark, title: "Visites académiques", desc: "Visites d'institutions publiques et de collectivités territoriales.", examples: ["Visite au Ministère de l'Intérieur (exemple)", "Rencontre à la Région (exemple)"] },
-    { icon: Users, title: "Rencontres avec des experts", desc: "Échanges avec des professionnels et chercheurs autour des thématiques du Master.", examples: ["Conférence sur la décentralisation (exemple)"] },
-    { icon: MessageSquare, title: "Workshops", desc: "Ateliers pratiques pour développer des compétences appliquées.", examples: ["Atelier gestion de projet public (exemple)"] },
-    { icon: BookOpen, title: "Formations", desc: "Sessions de formation complémentaires au programme académique.", examples: ["Formation en négociation territoriale (exemple)"] },
+    {
+      icon: Landmark,
+      title: "Visites académiques",
+      desc: "Visites de terrain auprès d'institutions publiques et parapubliques.",
+      examples: [
+        "Instance Générale de Partenariat Public-Privé (IGPPP) — 21 février 2025",
+        "École Nationale d'Administration (ENA), 1ère visite — 10 avril 2025",
+        "Institut Arabe des Chefs d'Entreprises (IACE) — 27 novembre 2025",
+        "Banque Centrale de Tunisie (BCT), visite d'étude — 19 décembre 2025",
+        "École Nationale d'Administration (ENA), 2ème visite — 3 avril 2026",
+      ],
+    },
+    {
+      icon: Users,
+      title: "Rencontres académiques",
+      desc: "Rencontres avec des experts et praticiens du secteur public autour des thématiques du Master.",
+      examples: [
+        "Cybersécurité et Gouvernance des Systèmes d'Information dans le Secteur Public — 14 décembre 2024",
+        "Finances Publiques : Réformes – Contrôle – Gouvernance — 22 novembre 2025",
+        "La bonne gouvernance des caisses de sécurité sociale en Tunisie : le cas de la CNSS — 8 décembre 2025",
+        "Intelligence Artificielle dans le Secteur Public : Enjeux, Obstacles et Perspectives — 13 décembre 2025",
+      ],
+    },
   ];
   return (
     <div>
       <h1 className="font-display text-3xl font-semibold mb-2">Nos activités</h1>
-      <p className="text-slate-500 text-sm mb-8">Les exemples ci-dessous sont à remplacer par vos vraies activités réalisées.</p>
+      <p className="text-slate-500 text-sm mb-8">
+        Ces visites et rencontres ont été organisées dans le cadre du Master MPGT. MPGT-Lab a
+        vocation à reprendre et à organiser ce même type d'activités pour les prochaines promotions.
+      </p>
       <div className="grid sm:grid-cols-2 gap-5">
         {cats.map((c) => (
           <div key={c.title} className="border border-slate-200 bg-white rounded-lg p-5">
             <c.icon className="w-6 h-6 text-brand-greenDark mb-3" />
             <h3 className="font-display text-lg font-semibold">{c.title}</h3>
             <p className="text-slate-600 text-sm mt-1">{c.desc}</p>
-            <ul className="mt-3 space-y-1">
+            <ul className="mt-3 space-y-1.5">
               {c.examples.map((e) => (
-                <li key={e} className="text-xs text-slate-500 flex items-center gap-1"><Calendar className="w-3 h-3" /> {e}</li>
+                <li key={e} className="text-xs text-slate-500 flex items-start gap-1.5"><Calendar className="w-3 h-3 mt-0.5 shrink-0" /> {e}</li>
               ))}
             </ul>
           </div>
@@ -413,6 +476,8 @@ function Reseaux() {
 /* ---------------- CONTRIBUER ---------------- */
 function Contribuer({ addSubmission, showToast, goTo }) {
   const [form, setForm] = useState({ title: "", type: "article", authorName: "", authorEmail: "", content: "" });
+  const [mode, setMode] = useState("texte"); // "texte" | "fichier"
+  const [file, setFile] = useState(null);
   const [lastCode, setLastCode] = useState(null);
   const [sending, setSending] = useState(false);
 
@@ -422,31 +487,61 @@ function Contribuer({ addSubmission, showToast, goTo }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!form.title || !form.authorName || !form.authorEmail || !form.content) {
-      showToast("Merci de remplir tous les champs.");
+    const missingBase = !form.title || !form.authorName || !form.authorEmail;
+    const missingContent = mode === "texte" ? !form.content : !file;
+    if (missingBase || missingContent) {
+      showToast(mode === "texte" ? "Merci de remplir tous les champs." : "Merci de remplir tous les champs et de joindre un fichier.");
       return;
     }
     setSending(true);
+
+    let fileUrl = "";
+    let fileName = "";
+    if (mode === "fichier") {
+      try {
+        const uploaded = await uploadContributionFile(file);
+        fileUrl = uploaded.fileUrl;
+        fileName = uploaded.fileName;
+      } catch (err) {
+        setSending(false);
+        showToast("Erreur lors de l'envoi du fichier : " + err.message);
+        return;
+      }
+    }
+
     const now = new Date().toISOString();
+    const code = genCode();
     const sub = {
       id: crypto.randomUUID(),
-      trackingCode: genCode(),
+      trackingCode: code,
       title: form.title,
       type: form.type,
       authorName: form.authorName,
       authorEmail: form.authorEmail,
-      content: form.content,
+      content: mode === "texte" ? form.content : "",
       status: "pending",
       adminComment: "",
       publishedContent: "",
+      fileUrl,
+      fileName,
       createdAt: now,
       updatedAt: now,
     };
     const ok = await addSubmission(sub);
     setSending(false);
     if (ok) {
-      setLastCode(sub.trackingCode);
+      sendConfirmationEmail({
+        toEmail: form.authorEmail,
+        toName: form.authorName,
+        title: form.title,
+        code,
+      }).catch(() => {
+        // L'échec de l'email n'empêche pas la contribution d'être enregistrée.
+      });
+      setLastCode(code);
       setForm({ title: "", type: "article", authorName: "", authorEmail: "", content: "" });
+      setFile(null);
+      setMode("texte");
     }
   }
 
@@ -460,7 +555,9 @@ function Contribuer({ addSubmission, showToast, goTo }) {
           <p className="text-xs text-stone-300 mb-1">Votre code de suivi</p>
           <p className="font-display text-2xl tracking-widest text-brand-green">{lastCode}</p>
         </div>
-        <p className="text-sm text-slate-500">Conservez ce code : il vous permettra de suivre le statut de votre contribution.</p>
+        <p className="text-sm text-slate-500">
+          Ce code vous a aussi été envoyé par email. Conservez-le : il vous permettra de suivre le statut de votre contribution.
+        </p>
         <button onClick={() => goTo("suivre")} className="mt-4 bg-brand-green hover:bg-brand-greenDark text-white px-5 py-2.5 rounded-md text-sm font-semibold">
           Suivre ma contribution
         </button>
@@ -499,10 +596,37 @@ function Contribuer({ addSubmission, showToast, goTo }) {
             <input type="email" value={form.authorEmail} onChange={(e) => update("authorEmail", e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
           </div>
         </div>
+
         <div>
-          <label className="text-sm font-semibold block mb-1">Votre texte</label>
-          <textarea value={form.content} onChange={(e) => update("content", e.target.value)} rows={8} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
+          <label className="text-sm font-semibold block mb-2">Comment souhaitez-vous contribuer ?</label>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => setMode("texte")} className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold border ${mode === "texte" ? "bg-brand-blue text-white border-brand-blue" : "bg-white text-slate-600 border-slate-300"}`}>
+              Écrire un texte
+            </button>
+            <button type="button" onClick={() => setMode("fichier")} className={`flex-1 px-3 py-2 rounded-md text-sm font-semibold border ${mode === "fichier" ? "bg-brand-blue text-white border-brand-blue" : "bg-white text-slate-600 border-slate-300"}`}>
+              Joindre un fichier
+            </button>
+          </div>
         </div>
+
+        {mode === "texte" ? (
+          <div>
+            <label className="text-sm font-semibold block mb-1">Votre texte</label>
+            <textarea value={form.content} onChange={(e) => update("content", e.target.value)} rows={8} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
+          </div>
+        ) : (
+          <div>
+            <label className="text-sm font-semibold block mb-1">Votre fichier (PDF, Word ou PowerPoint)</label>
+            <input
+              type="file"
+              accept=".pdf,.doc,.docx,.ppt,.pptx"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm bg-white"
+            />
+            {file && <p className="text-xs text-slate-500 mt-1">Fichier sélectionné : {file.name}</p>}
+          </div>
+        )}
+
         <button disabled={sending} className="bg-brand-green hover:bg-brand-greenDark text-white px-5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-60">
           {sending ? "Envoi…" : "Envoyer ma contribution"} <Send className="w-4 h-4" />
         </button>
@@ -517,6 +641,8 @@ function Suivre({ submissions, updateOne, showToast }) {
   const [email, setEmail] = useState("");
   const [found, setFound] = useState(null);
   const [revision, setRevision] = useState("");
+  const [newFile, setNewFile] = useState(null);
+  const [resending, setResending] = useState(false);
 
   function search() {
     const s = submissions.find(
@@ -529,12 +655,34 @@ function Suivre({ submissions, updateOne, showToast }) {
     }
     setFound(s);
     setRevision(s.content);
+    setNewFile(null);
   }
 
+  const isFileSubmission = !!found?.fileUrl;
+
   async function resend() {
-    await updateOne(found.id, { content: revision, status: "pending", adminComment: "" });
+    setResending(true);
+    if (isFileSubmission) {
+      if (!newFile) {
+        setResending(false);
+        showToast("Merci de joindre votre fichier corrigé.");
+        return;
+      }
+      try {
+        const uploaded = await uploadContributionFile(newFile);
+        await updateOne(found.id, { fileUrl: uploaded.fileUrl, fileName: uploaded.fileName, status: "pending", adminComment: "" });
+        setFound({ ...found, fileUrl: uploaded.fileUrl, fileName: uploaded.fileName, status: "pending", adminComment: "" });
+      } catch (err) {
+        setResending(false);
+        showToast("Erreur lors de l'envoi du fichier : " + err.message);
+        return;
+      }
+    } else {
+      await updateOne(found.id, { content: revision, status: "pending", adminComment: "" });
+      setFound({ ...found, content: revision, status: "pending", adminComment: "" });
+    }
+    setResending(false);
     showToast("Votre version corrigée a été renvoyée.");
-    setFound({ ...found, content: revision, status: "pending", adminComment: "" });
   }
 
   return (
@@ -555,6 +703,11 @@ function Suivre({ submissions, updateOne, showToast }) {
             <p className="font-display font-semibold">{found.title}</p>
             <Badge status={found.status} />
           </div>
+          {isFileSubmission && (
+            <a href={found.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-greenDark underline">
+              Voir le fichier envoyé : {found.fileName}
+            </a>
+          )}
           {found.adminComment && (
             <div className="bg-amber-50 border border-amber-200 rounded-md p-3 text-sm text-amber-900 mt-2">
               <p className="font-semibold mb-1">Commentaire des responsables :</p>
@@ -563,10 +716,24 @@ function Suivre({ submissions, updateOne, showToast }) {
           )}
           {found.status === "needs_revision" && (
             <div className="mt-4">
-              <label className="text-sm font-semibold block mb-1">Modifier votre texte</label>
-              <textarea value={revision} onChange={(e) => setRevision(e.target.value)} rows={6} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
-              <button onClick={resend} className="mt-2 bg-brand-green hover:bg-brand-greenDark text-white px-4 py-2 rounded-md text-sm font-semibold flex items-center gap-2">
-                <RotateCcw className="w-4 h-4" /> Renvoyer la version corrigée
+              {isFileSubmission ? (
+                <>
+                  <label className="text-sm font-semibold block mb-1">Joindre le fichier corrigé</label>
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.ppt,.pptx"
+                    onChange={(e) => setNewFile(e.target.files?.[0] || null)}
+                    className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm bg-white"
+                  />
+                </>
+              ) : (
+                <>
+                  <label className="text-sm font-semibold block mb-1">Modifier votre texte</label>
+                  <textarea value={revision} onChange={(e) => setRevision(e.target.value)} rows={6} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
+                </>
+              )}
+              <button disabled={resending} onClick={resend} className="mt-2 bg-brand-green hover:bg-brand-greenDark text-white px-4 py-2 rounded-md text-sm font-semibold flex items-center gap-2 disabled:opacity-60">
+                <RotateCcw className="w-4 h-4" /> {resending ? "Envoi…" : "Renvoyer la version corrigée"}
               </button>
             </div>
           )}
@@ -581,7 +748,9 @@ function Articles({ published, showToast }) {
   const [openId, setOpenId] = useState(null);
 
   async function share(a) {
-    const text = `${a.title} — par ${a.authorName}\n\n${a.publishedContent || a.content}`;
+    const text = a.fileUrl
+      ? `${a.title} — par ${a.authorName}\n\n${a.fileUrl}`
+      : `${a.title} — par ${a.authorName}\n\n${a.publishedContent || a.content}`;
     try {
       await navigator.clipboard.writeText(text);
       showToast("Contenu copié dans le presse-papier.");
@@ -607,11 +776,19 @@ function Articles({ published, showToast }) {
                 </div>
                 <button onClick={() => share(a)} className="text-slate-500 hover:text-brand-greenDark shrink-0"><Share2 className="w-5 h-5" /></button>
               </div>
-              <button onClick={() => setOpenId(openId === a.id ? null : a.id)} className="text-sm text-brand-greenDark font-semibold mt-3">
-                {openId === a.id ? "Réduire" : "Lire l'article"}
-              </button>
-              {openId === a.id && (
-                <p className="mt-3 text-slate-700 text-sm whitespace-pre-wrap leading-relaxed">{a.publishedContent || a.content}</p>
+              {a.fileUrl ? (
+                <a href={a.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-greenDark font-semibold mt-3 inline-block underline">
+                  Télécharger le fichier ({a.fileName})
+                </a>
+              ) : (
+                <>
+                  <button onClick={() => setOpenId(openId === a.id ? null : a.id)} className="text-sm text-brand-greenDark font-semibold mt-3">
+                    {openId === a.id ? "Réduire" : "Lire l'article"}
+                  </button>
+                  {openId === a.id && (
+                    <p className="mt-3 text-slate-700 text-sm whitespace-pre-wrap leading-relaxed">{a.publishedContent || a.content}</p>
+                  )}
+                </>
               )}
             </div>
           ))}
@@ -707,15 +884,22 @@ function Admin({ submissions, updateOne, showToast }) {
               <Badge status={s.status} />
             </div>
             <p className="text-sm text-slate-700 mt-3 whitespace-pre-wrap">{s.content}</p>
+            {s.fileUrl && (
+              <a href={s.fileUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-brand-greenDark underline mt-2 inline-block">
+                📄 Voir le fichier joint : {s.fileName}
+              </a>
+            )}
 
             {tab === "pending" && (
               <div className="flex flex-wrap gap-2 mt-4">
                 <button onClick={() => publishAsIs(s)} className="text-xs font-semibold bg-teal-700 text-white px-3 py-1.5 rounded-md flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Publier tel quel
                 </button>
-                <button onClick={() => { setEditingId(s.id); setEditText(s.content); }} className="text-xs font-semibold bg-brand-green text-white px-3 py-1.5 rounded-md flex items-center gap-1">
-                  <Edit3 className="w-3.5 h-3.5" /> Publier modifié
-                </button>
+                {!s.fileUrl && (
+                  <button onClick={() => { setEditingId(s.id); setEditText(s.content); }} className="text-xs font-semibold bg-brand-green text-white px-3 py-1.5 rounded-md flex items-center gap-1">
+                    <Edit3 className="w-3.5 h-3.5" /> Publier modifié
+                  </button>
+                )}
                 <button onClick={() => { setCommentingId(s.id); setCommentAction("needs_revision"); setCommentText(""); }} className="text-xs font-semibold bg-slate-500 text-white px-3 py-1.5 rounded-md flex items-center gap-1">
                   <RotateCcw className="w-3.5 h-3.5" /> Demander une révision
                 </button>
