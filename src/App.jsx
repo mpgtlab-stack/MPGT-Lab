@@ -164,6 +164,30 @@ export default function App() {
     setSubmissions((prev) => prev.map((s) => (s.id === id ? { ...s, ...full } : s)));
   }
 
+  async function deleteSubmission(sub) {
+    // Si un fichier était joint, on tente aussi de le supprimer du stockage.
+    // Un échec ici n'empêche pas la suppression de la contribution elle-même.
+    if (sub.fileUrl) {
+      try {
+        const marker = "/contributions/";
+        const idx = sub.fileUrl.indexOf(marker);
+        if (idx !== -1) {
+          const path = sub.fileUrl.slice(idx + marker.length);
+          await supabase.storage.from("contributions").remove([path]);
+        }
+      } catch (e) {
+        // On ignore : le fichier orphelin ne bloque rien de fonctionnel.
+      }
+    }
+    const { error } = await supabase.from("submissions").delete().eq("id", sub.id);
+    if (error) {
+      showToast("Erreur lors de la suppression : " + error.message);
+      return;
+    }
+    setSubmissions((prev) => prev.filter((s) => s.id !== sub.id));
+    showToast("Contribution supprimée définitivement.");
+  }
+
   function goTo(p) {
     setPage(p);
     setMenuOpen(false);
@@ -228,7 +252,7 @@ export default function App() {
             {page === "contribuer" && <Contribuer addSubmission={addSubmission} showToast={showToast} goTo={goTo} />}
             {page === "suivre" && <Suivre submissions={submissions} updateOne={updateOne} showToast={showToast} />}
             {page === "articles" && <Articles published={published} showToast={showToast} />}
-            {page === "admin" && <Admin submissions={submissions} updateOne={updateOne} showToast={showToast} />}
+            {page === "admin" && <Admin submissions={submissions} updateOne={updateOne} deleteSubmission={deleteSubmission} showToast={showToast} />}
           </>
         )}
       </main>
@@ -800,7 +824,7 @@ function Articles({ published, showToast }) {
 }
 
 /* ---------------- ADMIN ---------------- */
-function Admin({ submissions, updateOne, showToast }) {
+function Admin({ submissions, updateOne, deleteSubmission, showToast }) {
   const [authed, setAuthed] = useState(false);
   const [pwd, setPwd] = useState("");
   const [tab, setTab] = useState("pending");
@@ -810,6 +834,7 @@ function Admin({ submissions, updateOne, showToast }) {
   const [commentingId, setCommentingId] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [commentAction, setCommentAction] = useState(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   function tryLogin(e) {
     e.preventDefault();
@@ -962,6 +987,31 @@ function Admin({ submissions, updateOne, showToast }) {
                 </div>
               </div>
             )}
+
+            <div className="mt-4 border-t border-slate-100 pt-3">
+              {confirmDeleteId === s.id ? (
+                <div className="bg-rose-50 border border-rose-200 rounded-md p-3">
+                  <p className="text-xs font-semibold text-rose-900 mb-2">
+                    Êtes-vous sûre ? Cette suppression est définitive et ne pourra pas être annulée.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { deleteSubmission(s); setConfirmDeleteId(null); }}
+                      className="text-xs font-semibold bg-rose-700 text-white px-3 py-1.5 rounded-md"
+                    >
+                      Oui, supprimer définitivement
+                    </button>
+                    <button onClick={() => setConfirmDeleteId(null)} className="text-xs font-semibold text-slate-500">
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button onClick={() => setConfirmDeleteId(s.id)} className="text-xs font-semibold text-rose-700 hover:text-rose-900 underline">
+                  Supprimer définitivement
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
