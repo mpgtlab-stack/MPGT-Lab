@@ -5,7 +5,7 @@ import {
   RotateCcw, MessageSquare, Landmark
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
-import { sendConfirmationEmail } from "./emailService";
+import { sendConfirmationEmail, sendAcceptedEmail, sendRejectedEmail, sendRevisionEmail } from "./emailService";
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "ISCAE2026";
 
@@ -127,6 +127,7 @@ export default function App() {
     // Accès discret : ...votresite.com/#admin ou .../#suivre
     if (window.location.hash === "#admin") setPage("admin");
     if (window.location.hash === "#suivre") setPage("suivre");
+    if (window.location.hash === "#articles") setPage("articles");
   }, []);
 
   function showToast(msg) {
@@ -805,6 +806,7 @@ function Admin({ submissions, updateOne, showToast }) {
   const [tab, setTab] = useState("pending");
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
+  const [editComment, setEditComment] = useState("");
   const [commentingId, setCommentingId] = useState(null);
   const [commentText, setCommentText] = useState("");
   const [commentAction, setCommentAction] = useState(null);
@@ -815,19 +817,31 @@ function Admin({ submissions, updateOne, showToast }) {
     else showToast("Mot de passe incorrect.");
   }
 
+  function articleLink(s) {
+    return s.fileUrl || `${window.location.origin}${window.location.pathname}#articles`;
+  }
+
   function publishAsIs(s) {
     updateOne(s.id, { status: "published", publishedContent: s.content });
+    sendAcceptedEmail({ toEmail: s.authorEmail, toName: s.authorName, title: s.title, link: articleLink(s) }).catch((err) => console.error("Erreur envoi email:", err));
     showToast("Publié tel quel.");
   }
 
   function confirmEdit(s) {
-    updateOne(s.id, { status: "published", publishedContent: editText });
+    updateOne(s.id, { status: "published", publishedContent: editText, adminComment: editComment });
+    sendAcceptedEmail({ toEmail: s.authorEmail, toName: s.authorName, title: s.title, link: articleLink(s), comment: editComment }).catch((err) => console.error("Erreur envoi email:", err));
     setEditingId(null);
     showToast("Publié avec modifications.");
   }
 
   function confirmComment(s) {
     updateOne(s.id, { status: commentAction, adminComment: commentText });
+    if (commentAction === "rejected") {
+      sendRejectedEmail({ toEmail: s.authorEmail, toName: s.authorName, title: s.title, comment: commentText }).catch((err) => console.error("Erreur envoi email:", err));
+    } else if (commentAction === "needs_revision") {
+      const suivreLink = `${window.location.origin}${window.location.pathname}#suivre`;
+      sendRevisionEmail({ toEmail: s.authorEmail, toName: s.authorName, title: s.title, comment: commentText, link: suivreLink }).catch((err) => console.error("Erreur envoi email:", err));
+    }
     setCommentingId(null);
     setCommentText("");
     showToast(commentAction === "needs_revision" ? "Renvoyé à l'auteur." : "Contribution non retenue.");
@@ -896,7 +910,7 @@ function Admin({ submissions, updateOne, showToast }) {
                   <CheckCircle2 className="w-3.5 h-3.5" /> Publier tel quel
                 </button>
                 {!s.fileUrl && (
-                  <button onClick={() => { setEditingId(s.id); setEditText(s.content); }} className="text-xs font-semibold bg-brand-green text-white px-3 py-1.5 rounded-md flex items-center gap-1">
+                  <button onClick={() => { setEditingId(s.id); setEditText(s.content); setEditComment(""); }} className="text-xs font-semibold bg-brand-green text-white px-3 py-1.5 rounded-md flex items-center gap-1">
                     <Edit3 className="w-3.5 h-3.5" /> Publier modifié
                   </button>
                 )}
@@ -927,6 +941,8 @@ function Admin({ submissions, updateOne, showToast }) {
               <div className="mt-4 border-t border-slate-200 pt-4">
                 <label className="text-sm font-semibold block mb-1">Texte à publier</label>
                 <textarea value={editText} onChange={(e) => setEditText(e.target.value)} rows={6} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
+                <label className="text-sm font-semibold block mb-1 mt-3">Expliquer les modifications à l'auteur (facultatif)</label>
+                <textarea value={editComment} onChange={(e) => setEditComment(e.target.value)} rows={3} placeholder="Ex : nous avons reformulé l'introduction et raccourci la conclusion pour plus de clarté." className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
                 <div className="flex gap-2 mt-2">
                   <button onClick={() => confirmEdit(s)} className="text-xs font-semibold bg-teal-700 text-white px-3 py-1.5 rounded-md">Confirmer & publier</button>
                   <button onClick={() => setEditingId(null)} className="text-xs font-semibold text-slate-500">Annuler</button>
