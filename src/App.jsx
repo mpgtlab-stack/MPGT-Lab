@@ -5,7 +5,7 @@ import {
   RotateCcw, MessageSquare, Landmark
 } from "lucide-react";
 import { supabase } from "./supabaseClient";
-import { sendConfirmationEmail, sendAcceptedEmail, sendRejectedEmail, sendRevisionEmail } from "./emailService";
+import { sendConfirmationEmail, sendAcceptedEmail, sendRejectedEmail, sendRevisionEmail, sendContactEmail } from "./emailService";
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "ISCAE2026";
 
@@ -248,7 +248,7 @@ export default function App() {
           <p className="text-slate-500 text-sm">Chargement…</p>
         ) : (
           <>
-            {page === "accueil" && <Accueil goTo={goTo} published={published} submissions={submissions} />}
+            {page === "accueil" && <Accueil goTo={goTo} published={published} submissions={submissions} showToast={showToast} />}
             {page === "contribuer" && <Contribuer addSubmission={addSubmission} showToast={showToast} goTo={goTo} />}
             {page === "suivre" && <Suivre submissions={submissions} updateOne={updateOne} showToast={showToast} />}
             {page === "articles" && <Articles published={published} showToast={showToast} />}
@@ -293,8 +293,32 @@ const SUB_TABS = [
   { id: "reseaux", label: "Réseaux" },
 ];
 
-function Accueil({ goTo, published, submissions }) {
+function Accueil({ goTo, published, submissions, showToast }) {
   const [subTab, setSubTab] = useState("accueil");
+  const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
+  const [contactSending, setContactSending] = useState(false);
+  const [contactSent, setContactSent] = useState(false);
+
+  function updateContact(field, value) {
+    setContactForm((f) => ({ ...f, [field]: value }));
+  }
+
+  async function handleContactSubmit(e) {
+    e.preventDefault();
+    if (!contactForm.name || !contactForm.email || !contactForm.message) {
+      showToast("Merci de remplir tous les champs.");
+      return;
+    }
+    setContactSending(true);
+    try {
+      await sendContactEmail(contactForm);
+      setContactSent(true);
+      setContactForm({ name: "", email: "", message: "" });
+    } catch (err) {
+      showToast("Erreur lors de l'envoi : " + err.message);
+    }
+    setContactSending(false);
+  }
 
   return (
     <div>
@@ -362,6 +386,36 @@ function Accueil({ goTo, published, submissions }) {
                   </div>
                 ))}
               </div>
+            )}
+          </section>
+
+          <section className="py-10 border-t border-slate-200">
+            <div className="max-w-xl mx-auto text-center">
+              <h2 className="font-display text-2xl font-semibold mb-2">Partenariat, collaboration, une question ?</h2>
+              <p className="text-slate-600 text-sm mb-6">
+                Vous représentez une organisation ou vous souhaitez simplement nous contacter ? Écrivez-nous directement ici.
+              </p>
+            </div>
+            {contactSent ? (
+              <div className="max-w-xl mx-auto text-center bg-white border border-slate-200 rounded-lg p-6">
+                <CheckCircle2 className="w-10 h-10 text-teal-700 mx-auto mb-3" />
+                <p className="font-semibold">Merci, votre message a bien été envoyé !</p>
+                <p className="text-sm text-slate-500 mt-1">L'équipe MPGT-Lab reviendra vers vous rapidement.</p>
+                <button onClick={() => setContactSent(false)} className="mt-4 text-sm underline text-slate-600">Envoyer un autre message</button>
+              </div>
+            ) : (
+              <form onSubmit={handleContactSubmit} className="max-w-xl mx-auto space-y-3">
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <input placeholder="Votre nom" value={contactForm.name} onChange={(e) => updateContact("name", e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
+                  <input type="email" placeholder="Votre email" value={contactForm.email} onChange={(e) => updateContact("email", e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
+                </div>
+                <textarea placeholder="Votre message" value={contactForm.message} onChange={(e) => updateContact("message", e.target.value)} rows={4} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
+                <div className="text-center">
+                  <button disabled={contactSending} className="bg-brand-blue hover:bg-brand-blueLight text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60">
+                    {contactSending ? "Envoi…" : "Envoyer le message"}
+                  </button>
+                </div>
+              </form>
             )}
           </section>
         </div>

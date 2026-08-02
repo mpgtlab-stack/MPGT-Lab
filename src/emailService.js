@@ -3,12 +3,13 @@ import emailjs from "@emailjs/browser";
 const SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID;
 const TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
 const PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+const CLUB_EMAIL = import.meta.env.VITE_CLUB_EMAIL || "mpgtlab@gmail.com";
 
-// Un seul et même template EmailJS sert pour les 4 situations (confirmation,
-// acceptation, révision demandée, refus) : seuls le sujet et le contenu
+// Un seul et même template EmailJS sert pour toutes les situations (confirmation,
+// acceptation, révision demandée, refus, contact) : seuls le sujet et le contenu
 // changent, envoyés comme variables. Ça reste dans la limite de 2 templates
 // gratuits d'EmailJS (on n'en utilise qu'un).
-async function send({ toEmail, toName, subject, intro, detail, linkLine }) {
+async function send({ toEmail, toName, subject, intro, detail, linkLine, replyTo }) {
   if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
     console.warn("EmailJS non configuré : email non envoyé.");
     return;
@@ -23,6 +24,7 @@ async function send({ toEmail, toName, subject, intro, detail, linkLine }) {
       intro,
       detail: detail || "",
       link_line: linkLine || "",
+      reply_to: replyTo || "",
     },
     { publicKey: PUBLIC_KEY }
   );
@@ -74,5 +76,21 @@ export async function sendRejectedEmail({ toEmail, toName, title, comment }) {
     intro: `Nous vous remercions d'avoir proposé votre contribution "${title}" à MPGT-Lab. Après examen, les responsables ont décidé de ne pas la publier.`,
     detail: comment && comment.trim() ? `Note des responsables : ${comment.trim()}` : "",
     linkLine: "",
+  });
+}
+
+// Email envoyé au Club quand quelqu'un remplit le formulaire de contact
+// (partenariat, collaboration, question générale) depuis la page d'accueil.
+// "reply_to" permet aux responsables de répondre directement à la personne
+// en cliquant simplement sur "Répondre" dans leur boîte mail.
+export async function sendContactEmail({ name, email, message }) {
+  await send({
+    toEmail: CLUB_EMAIL,
+    toName: "MPGT-Lab",
+    subject: `Nouveau message via le site : ${name}`,
+    intro: `Vous avez reçu un nouveau message depuis le formulaire de contact du site (partenariat / collaboration).`,
+    detail: `Nom : ${name} — Email : ${email}. Message : ${message}`,
+    linkLine: "",
+    replyTo: email,
   });
 }
