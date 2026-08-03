@@ -340,10 +340,10 @@ function Accueil({ goTo, published, submissions, showToast }) {
 
       <div id="section-accueil">
         <section className="text-center py-10 sm:py-16">
-          <p className="uppercase tracking-widest text-brand-greenDark text-xs font-semibold mb-3">ISCAE · Master Professionnel</p>
-          <h1 className="font-display text-4xl sm:text-5xl font-semibold leading-tight max-w-3xl mx-auto">
-            Management Public & Gouvernance Territoriale
+          <h1 className="mb-4">
+            <img src="/logo.png" alt="MPGT-Lab — Shaping the Future of Public Leadership" className="mx-auto w-28 sm:w-36 h-auto" />
           </h1>
+          <p className="uppercase tracking-widest text-brand-greenDark text-xs font-semibold mb-3">ISCAE · Master Professionnel</p>
           <p className="mt-5 text-slate-600 max-w-xl mx-auto text-base sm:text-lg">
             MPGT-Lab, le club des étudiants du Master : visites académiques, rencontres avec
             des experts — et un espace ouvert pour partager vos écrits et recherches.
