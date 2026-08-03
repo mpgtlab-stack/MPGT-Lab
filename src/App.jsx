@@ -388,8 +388,20 @@ function Accueil({ goTo, published, submissions, showToast }) {
             </div>
           )}
         </section>
+      </div>
 
-        <section className="py-10 border-t border-slate-200">
+      <div id="section-club" className="pt-10 border-t border-slate-200">
+        <Club />
+      </div>
+      <div id="section-activites" className="pt-10 border-t border-slate-200">
+        <Activites />
+      </div>
+      <div id="section-reseaux" className="pt-10 border-t border-slate-200">
+        <Reseaux />
+      </div>
+
+      <div className="pt-10 border-t border-slate-200">
+        <section className="py-10">
           <div className="max-w-xl mx-auto text-center">
             <h2 className="font-display text-2xl font-semibold mb-2">Partenariat, collaboration, une question ?</h2>
             <p className="text-slate-600 text-sm mb-6">
@@ -418,16 +430,6 @@ function Accueil({ goTo, published, submissions, showToast }) {
             </form>
           )}
         </section>
-      </div>
-
-      <div id="section-club" className="pt-10 border-t border-slate-200">
-        <Club />
-      </div>
-      <div id="section-activites" className="pt-10 border-t border-slate-200">
-        <Activites />
-      </div>
-      <div id="section-reseaux" className="pt-10 border-t border-slate-200">
-        <Reseaux />
       </div>
     </div>
   );
