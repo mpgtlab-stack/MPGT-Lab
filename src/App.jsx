@@ -294,7 +294,6 @@ const SUB_TABS = [
 ];
 
 function Accueil({ goTo, published, submissions, showToast }) {
-  const [subTab, setSubTab] = useState("accueil");
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
   const [contactSending, setContactSending] = useState(false);
   const [contactSent, setContactSent] = useState(false);
@@ -320,110 +319,117 @@ function Accueil({ goTo, published, submissions, showToast }) {
     setContactSending(false);
   }
 
+  function scrollToSection(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
     <div>
-      <div className="flex flex-wrap gap-2 mb-8 justify-center">
+      <div className="flex flex-wrap gap-2 mb-8 justify-center sticky top-16 z-30 bg-stone-50/95 backdrop-blur py-2">
         {SUB_TABS.map((t) => (
           <button
             key={t.id}
-            onClick={() => setSubTab(t.id)}
-            className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
-              subTab === t.id ? "bg-brand-blue text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-            }`}
+            onClick={() => scrollToSection(`section-${t.id}`)}
+            className="px-4 py-2 rounded-full text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-brand-blue hover:text-white transition-colors"
           >
             {t.label}
           </button>
         ))}
       </div>
 
-      {subTab === "accueil" && (
-        <div>
-          <section className="text-center py-10 sm:py-16">
-            <p className="uppercase tracking-widest text-brand-greenDark text-xs font-semibold mb-3">ISCAE · Master Professionnel</p>
-            <h1 className="font-display text-4xl sm:text-5xl font-semibold leading-tight max-w-3xl mx-auto">
-              Management Public & Gouvernance Territoriale
-            </h1>
-            <p className="mt-5 text-slate-600 max-w-xl mx-auto text-base sm:text-lg">
-              MPGT-Lab, le club des étudiants du Master : visites académiques, rencontres avec
-              des experts — et un espace ouvert pour partager vos écrits et recherches.
+      <div id="section-accueil">
+        <section className="text-center py-10 sm:py-16">
+          <p className="uppercase tracking-widest text-brand-greenDark text-xs font-semibold mb-3">ISCAE · Master Professionnel</p>
+          <h1 className="font-display text-4xl sm:text-5xl font-semibold leading-tight max-w-3xl mx-auto">
+            Management Public & Gouvernance Territoriale
+          </h1>
+          <p className="mt-5 text-slate-600 max-w-xl mx-auto text-base sm:text-lg">
+            MPGT-Lab, le club des étudiants du Master : visites académiques, rencontres avec
+            des experts — et un espace ouvert pour partager vos écrits et recherches.
+          </p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <button onClick={() => goTo("contribuer")} className="bg-brand-green hover:bg-brand-greenDark text-white px-5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2">
+              Proposer un article <ArrowRight className="w-4 h-4" />
+            </button>
+            <button onClick={() => goTo("articles")} className="border border-slate-300 hover:bg-slate-100 px-5 py-2.5 rounded-md text-sm font-semibold">
+              Lire les publications
+            </button>
+          </div>
+        </section>
+
+        <section className="grid sm:grid-cols-3 gap-4 py-8 border-y border-slate-200">
+          <div className="text-center">
+            <p className="font-display text-3xl font-semibold text-slate-900">{published.length}</p>
+            <p className="text-sm text-slate-500">Contenus publiés</p>
+          </div>
+          <div className="text-center">
+            <p className="font-display text-3xl font-semibold text-slate-900">{submissions.length}</p>
+            <p className="text-sm text-slate-500">Contributions reçues</p>
+          </div>
+          <div className="text-center">
+            <p className="font-display text-3xl font-semibold text-slate-900">2</p>
+            <p className="text-sm text-slate-500">Types d'activités du Club</p>
+          </div>
+        </section>
+
+        <section className="py-10">
+          <h2 className="font-display text-2xl font-semibold mb-6">Dernières publications</h2>
+          {published.length === 0 ? (
+            <p className="text-slate-500 text-sm">Aucune publication pour le moment — soyez le premier à contribuer !</p>
+          ) : (
+            <div className="grid sm:grid-cols-3 gap-4">
+              {published.slice(0, 3).map((a) => (
+                <div key={a.id} className="border border-slate-200 bg-white rounded-lg p-4">
+                  <Badge status={a.status} />
+                  <p className="font-display font-semibold mt-2">{a.title}</p>
+                  <p className="text-xs text-slate-500 mt-1">Par {a.authorName} · {fmtDate(a.createdAt)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="py-10 border-t border-slate-200">
+          <div className="max-w-xl mx-auto text-center">
+            <h2 className="font-display text-2xl font-semibold mb-2">Partenariat, collaboration, une question ?</h2>
+            <p className="text-slate-600 text-sm mb-6">
+              Vous représentez une organisation ou vous souhaitez simplement nous contacter ? Écrivez-nous directement ici.
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <button onClick={() => goTo("contribuer")} className="bg-brand-green hover:bg-brand-greenDark text-white px-5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2">
-                Proposer un article <ArrowRight className="w-4 h-4" />
-              </button>
-              <button onClick={() => goTo("articles")} className="border border-slate-300 hover:bg-slate-100 px-5 py-2.5 rounded-md text-sm font-semibold">
-                Lire les publications
-              </button>
+          </div>
+          {contactSent ? (
+            <div className="max-w-xl mx-auto text-center bg-white border border-slate-200 rounded-lg p-6">
+              <CheckCircle2 className="w-10 h-10 text-teal-700 mx-auto mb-3" />
+              <p className="font-semibold">Merci, votre message a bien été envoyé !</p>
+              <p className="text-sm text-slate-500 mt-1">L'équipe MPGT-Lab reviendra vers vous rapidement.</p>
+              <button onClick={() => setContactSent(false)} className="mt-4 text-sm underline text-slate-600">Envoyer un autre message</button>
             </div>
-          </section>
-
-          <section className="grid sm:grid-cols-3 gap-4 py-8 border-y border-slate-200">
-            <div className="text-center">
-              <p className="font-display text-3xl font-semibold text-slate-900">{published.length}</p>
-              <p className="text-sm text-slate-500">Contenus publiés</p>
-            </div>
-            <div className="text-center">
-              <p className="font-display text-3xl font-semibold text-slate-900">{submissions.length}</p>
-              <p className="text-sm text-slate-500">Contributions reçues</p>
-            </div>
-            <div className="text-center">
-              <p className="font-display text-3xl font-semibold text-slate-900">2</p>
-              <p className="text-sm text-slate-500">Types d'activités du Club</p>
-            </div>
-          </section>
-
-          <section className="py-10">
-            <h2 className="font-display text-2xl font-semibold mb-6">Dernières publications</h2>
-            {published.length === 0 ? (
-              <p className="text-slate-500 text-sm">Aucune publication pour le moment — soyez le premier à contribuer !</p>
-            ) : (
-              <div className="grid sm:grid-cols-3 gap-4">
-                {published.slice(0, 3).map((a) => (
-                  <div key={a.id} className="border border-slate-200 bg-white rounded-lg p-4">
-                    <Badge status={a.status} />
-                    <p className="font-display font-semibold mt-2">{a.title}</p>
-                    <p className="text-xs text-slate-500 mt-1">Par {a.authorName} · {fmtDate(a.createdAt)}</p>
-                  </div>
-                ))}
+          ) : (
+            <form onSubmit={handleContactSubmit} className="max-w-xl mx-auto space-y-3">
+              <div className="grid sm:grid-cols-2 gap-3">
+                <input placeholder="Votre nom" value={contactForm.name} onChange={(e) => updateContact("name", e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
+                <input type="email" placeholder="Votre email" value={contactForm.email} onChange={(e) => updateContact("email", e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
               </div>
-            )}
-          </section>
-
-          <section className="py-10 border-t border-slate-200">
-            <div className="max-w-xl mx-auto text-center">
-              <h2 className="font-display text-2xl font-semibold mb-2">Partenariat, collaboration, une question ?</h2>
-              <p className="text-slate-600 text-sm mb-6">
-                Vous représentez une organisation ou vous souhaitez simplement nous contacter ? Écrivez-nous directement ici.
-              </p>
-            </div>
-            {contactSent ? (
-              <div className="max-w-xl mx-auto text-center bg-white border border-slate-200 rounded-lg p-6">
-                <CheckCircle2 className="w-10 h-10 text-teal-700 mx-auto mb-3" />
-                <p className="font-semibold">Merci, votre message a bien été envoyé !</p>
-                <p className="text-sm text-slate-500 mt-1">L'équipe MPGT-Lab reviendra vers vous rapidement.</p>
-                <button onClick={() => setContactSent(false)} className="mt-4 text-sm underline text-slate-600">Envoyer un autre message</button>
+              <textarea placeholder="Votre message" value={contactForm.message} onChange={(e) => updateContact("message", e.target.value)} rows={4} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
+              <div className="text-center">
+                <button disabled={contactSending} className="bg-brand-blue hover:bg-brand-blueLight text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60">
+                  {contactSending ? "Envoi…" : "Envoyer le message"}
+                </button>
               </div>
-            ) : (
-              <form onSubmit={handleContactSubmit} className="max-w-xl mx-auto space-y-3">
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <input placeholder="Votre nom" value={contactForm.name} onChange={(e) => updateContact("name", e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
-                  <input type="email" placeholder="Votre email" value={contactForm.email} onChange={(e) => updateContact("email", e.target.value)} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
-                </div>
-                <textarea placeholder="Votre message" value={contactForm.message} onChange={(e) => updateContact("message", e.target.value)} rows={4} className="w-full border border-slate-300 rounded-md px-3 py-2 text-sm" />
-                <div className="text-center">
-                  <button disabled={contactSending} className="bg-brand-blue hover:bg-brand-blueLight text-white px-5 py-2.5 rounded-md text-sm font-semibold disabled:opacity-60">
-                    {contactSending ? "Envoi…" : "Envoyer le message"}
-                  </button>
-                </div>
-              </form>
-            )}
-          </section>
-        </div>
-      )}
+            </form>
+          )}
+        </section>
+      </div>
 
-      {subTab === "club" && <Club />}
-      {subTab === "activites" && <Activites />}
-      {subTab === "reseaux" && <Reseaux />}
+      <div id="section-club" className="pt-10 border-t border-slate-200">
+        <Club />
+      </div>
+      <div id="section-activites" className="pt-10 border-t border-slate-200">
+        <Activites />
+      </div>
+      <div id="section-reseaux" className="pt-10 border-t border-slate-200">
+        <Reseaux />
+      </div>
     </div>
   );
 }
