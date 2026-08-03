@@ -438,12 +438,11 @@ function Accueil({ goTo, published, submissions, showToast }) {
 /* ---------------- LE CLUB ---------------- */
 function Club() {
   const bureau = [
-    { role: "Présidente", name: "Ben Rhouma Maha" },
+    { role: "Présidente & Responsable Média", name: "Ben Rhouma Maha" },
     { role: "Trésorière", name: "Sabbagh Maryem" },
     { role: "Vice-présidente & Responsable RH", name: "Kort Eya" },
     { role: "Responsable Relations Institutionnelles", name: "Jouini Ikram" },
     { role: "Responsable Recherche & Publications", name: "Zeineb Dhaouedi" },
-    { role: "Responsable Média", name: "Ben Rhouma Maha" },
     { role: "Responsable Communication & Événement", name: "Salem Yasmine" },
   ];
   return (
